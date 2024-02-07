@@ -6,7 +6,7 @@
 install.packages("IPDfromKM")
 library(IPDfromKM)
 
-## First step, go on digitilzest and for each arm (important, use 100 as the maximum in y axis), you export an csv files on your Desktop (EXP for the experimental arm, and CON for the control arm)
+## First step, go on digitilzest and for each arm (important, use 100 as the maximum in y axis), you export an csv or excel files on your Desktop (EXP for the experimental arm, and CON for the control arm)
 
 ## first the experimental arm
 ##read the data
