@@ -1,6 +1,6 @@
 ## How to reconstruct data from published KM curves
 
-### everything eplained here: https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01308-8
+### everything explained here: https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01308-8
 
 ### install package
 install.packages("IPDfromKM")
@@ -10,37 +10,37 @@ library(IPDfromKM)
 
 ## first the experimental arm
 ##read the data
-E <- read.csv(file="/Users/kailash/Desktop/EXP.csv", sep = ",", header=T)
+E <- read.csv(file="/Users/Desktop/EXP.csv", sep = ",", header=T)
 E <- EXP
 colnames(E) <-c("time", "survival probability")
 
-## the same with the control arm (we called C)
-C <- read.csv(file="/Users/kailash/Desktop/CON.csv", sep = ",", header=T)#sep = , I don't know why, but it's important
+## the same with the control arm (called C)
+C <- read.csv(file="/Users/Desktop/CON.csv", sep = ",", header=T)
 C <- CON
 colnames(C) <-c("time", "survival probability")
 
 ##time risk, separate by comma (no space allowed)
 trisk <- c(0,3,6,9,12,15,18,21,24,27,30)
 
-## number at risk experimental arm
+## number at risk experimental arm (no space allowed)
 nrisk.E <- c(200,135,89,45,17,8,4,2,0,0,0)
 
-## number at risk control arm 
+## number at risk control arm (no space allowed)
 nrisk.C <- c(200,98,57,35,16,8,6,5,3,1,0)
 
 ## preprocess the data
 pre_E <- preprocess(dat=E, trisk=trisk, nrisk=nrisk.E, maxy=100)
 pre_C <- preprocess(dat=C, trisk=trisk, nrisk=nrisk.C, maxy=100)
 
-## then individual patient data = IPD, for experimental treat is 1, for control group treat is 0
+## then individual patient data = IPD, (experimental treatment is 1, control group treatment is 0)
 est_E_OS <- getIPD(prep=pre_E, armID=1, tot.events = NULL)
 est_C_OS <- getIPD(prep=pre_C, armID=0, tot.events = NULL)
 
-### important, you can isolate the IPD part (time, status, treat) from est_E_OS and est_C_OS
+## you can isolate the IPD part (time, status, treat) from est_E_OS and est_C_OS
 est_E_OS$IPD
 est_C_OS$IPD
 
-### the summary function allow to have the data of events, censoring, etc. 
+## the summary function allow to have the data of events, censoring, etc. 
 summary(est_E_OS)
 summary (est_C_OS)
 
@@ -56,18 +56,20 @@ x <- surv_data$time
 y <- surv_data$status
 z <- surv_data$arm
 
-##then Kaplan-Meier Curve
+## Kaplan-Meier Curve
 par(mar = c(1, 1, 1, 1), xaxs = "i", yaxs = "i")
 plot(survfit(Surv(x,y)~z), xlim = c(0, 30), ylim = c(0, 1), 
      col=c("#66CC66", "#6699CC"), lwd=3, xaxt='n', bty = "l", 
      las = 1, cex.axis = 1.5, tcl  = -0.5)
 axis(side=1, at=seq(0, 30, by=3), cex.axis = 1.5)
 
-## then Cox, HR and p-value
+## Cox, HR and p-value
 summary(coxph(Surv(x,y)~z))
 
-#### simulation of various "censoring scenario"
-## we will modify some values of the reconstructed IPD data
+#------------------------------------------------------------------------------
+
+## simulation of various "censoring scenario"
+## modify some values of the reconstructed IPD data
 
 newdata <- rbind(est_E_OS$IPD, est_C_OS$IPD)
 
@@ -75,19 +77,19 @@ newdata <- rbind(est_E_OS$IPD, est_C_OS$IPD)
 set.seed(123)
 
 # Parameters for the experimental arm (censored for additional toxicity, more likely to present the event)
-# here we will take the censored patients from 0 to 3 months
+# here we will take the censored patients from 0 to 6 months
 # then randomly pick a percentage of those (15%)
 # and change their status between being censored to having the event
 startTime <- 0 # start time
-endTime <- 3 # end time
+endTime <- 6 # end time
 Eperc <- 15 # Percentage of "0" status to be changed to "1"
 
 # Parameters for the control arm (censored for patient disappointement, less likely to present the event)
-# here we will take the censored patients from 0 to 3 months
+# here we will take the censored patients from 0 to 6 months
 # then randomly pick a percentage of those (15%)
 # and change the time of censoring to be the same as the last patient being censored in this arm
 startTime <- 0 # start time
-endTime <- 3 # end time
+endTime <- 6 # end time
 Cperc <- 15 # Percentage of times to be changed
 
 # Subset rows with treat = 1 and time within [startTime, endTime]
@@ -133,18 +135,18 @@ newdata[newdata$treat == 0 & newdata$time >= startTime & newdata$time <= endTime
 c_change
 e_change
 
-#### SURVIVAL ANALYIS
+## "Modeled" SURVIVAL ANALYIS
 ##preparation
 x <- newdata$time
 y <- newdata$status
 z <- newdata$treat
 
-##then Kaplan-Meier Curve
+## Kaplan-Meier Curve
 par(mar = c(1, 1, 1, 1), xaxs = "i", yaxs = "i")
 plot(survfit(Surv(x,y)~z), xlim = c(0, 30), ylim = c(0, 1), 
      col=c("#66CC66", "#6699CC"), lwd=3, xaxt='n', bty = "l", 
      las = 1, cex.axis = 1.5, tcl  = -0.5)
 axis(side=1, at=seq(0, 30, by=3), cex.axis = 1.5)
 
-## then Cox, HR and p-value
+## Cox, HR and p-value
 summary(coxph(Surv(x,y)~z))
